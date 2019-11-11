@@ -4,10 +4,13 @@ namespace App\Command;
 
 use App\Repository\ArticleRepository;
 use App\Repository\UserRepository;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\NamedAddress;
 
 class AuthorWeeklyReportSendCommand extends Command
 {
@@ -18,12 +21,17 @@ class AuthorWeeklyReportSendCommand extends Command
 
     /** @var ArticleRepository */
     private $articleRepository;
+    /**
+     * @var MailerInterface
+     */
+    private $mailer;
 
-    public function __construct(UserRepository $userRepository, ArticleRepository $articleRepository)
+    public function __construct(UserRepository $userRepository, ArticleRepository $articleRepository, MailerInterface $mailer)
     {
         parent::__construct(null);
         $this->userRepository = $userRepository;
         $this->articleRepository = $articleRepository;
+        $this->mailer = $mailer;
     }
 
     protected function configure()
@@ -52,6 +60,18 @@ class AuthorWeeklyReportSendCommand extends Command
             if (count($articles) === 0) {
                 continue;
             }
+
+            $email = (new TemplatedEmail())
+                ->from(new NamedAddress('alienmailer@example.com', 'The Space Bar'))
+                ->to(new NamedAddress($author->getEmail(), $author->getFirstName()))
+                ->subject('Your weekly report on The Space Bar!')
+                ->htmlTemplate('email/author-weekly-report.html.twig')
+                ->context([
+                    'author' => $author,
+                    'articles' => $articles
+                ]);
+
+            $this->mailer->send($email);
         }
 
         $io->progressFinish();

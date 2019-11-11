@@ -33,7 +33,8 @@
         "symfony/webpack-encore-bundle": "^1.4",
         "symfony/yaml": "^4.0",
         "twig/cssinliner-extra": "^2.12",
-        "twig/extensions": "^1.5"
+        "twig/extensions": "^1.5",
+        "twig/inky-extra": "^2.12"
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^3.0",

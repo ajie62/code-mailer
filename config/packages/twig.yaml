@@ -2,8 +2,8 @@ twig:
     default_path: '%kernel.project_dir%/templates'
     debug: '%kernel.debug%'
     paths:
-        'assets/images': images
-        'assets/css': styles
+        'assets/images': images # path that allows us to write `@styles` to refer to the assets/images directory.
+        'assets/css': styles # path that allows us to write `@styles` to refer to the assets/css directory.
     strict_variables: '%kernel.debug%'
     form_themes:
         - bootstrap_4_layout.html.twig

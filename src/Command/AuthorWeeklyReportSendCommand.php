@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Repository\ArticleRepository;
 use App\Repository\UserRepository;
+use Knp\Snappy\Pdf;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,6 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\NamedAddress;
+use Twig\Environment;
 
 class AuthorWeeklyReportSendCommand extends Command
 {
@@ -21,17 +23,29 @@ class AuthorWeeklyReportSendCommand extends Command
 
     /** @var ArticleRepository */
     private $articleRepository;
-    /**
-     * @var MailerInterface
-     */
+
+    /** @var MailerInterface */
     private $mailer;
 
-    public function __construct(UserRepository $userRepository, ArticleRepository $articleRepository, MailerInterface $mailer)
-    {
+    /**v@var Environment */
+    private $twig;
+
+    /** @var Pdf */
+    private $pdf;
+
+    public function __construct(
+        UserRepository $userRepository,
+        ArticleRepository $articleRepository,
+        MailerInterface $mailer,
+        Environment $twig,
+        Pdf $pdf
+    ) {
         parent::__construct(null);
         $this->userRepository = $userRepository;
         $this->articleRepository = $articleRepository;
         $this->mailer = $mailer;
+        $this->twig = $twig;
+        $this->pdf = $pdf;
     }
 
     protected function configure()
@@ -61,6 +75,12 @@ class AuthorWeeklyReportSendCommand extends Command
                 continue;
             }
 
+            $html = $this->twig->render('email/author-weekly-report-pdf.html.twig', [
+                'articles' => $articles,
+            ]);
+
+            $pdf = $this->pdf->getOutputFromHtml($html);
+
             $email = (new TemplatedEmail())
                 ->from(new NamedAddress('alienmailer@example.com', 'The Space Bar'))
                 ->to(new NamedAddress($author->getEmail(), $author->getFirstName()))
@@ -69,7 +89,8 @@ class AuthorWeeklyReportSendCommand extends Command
                 ->context([
                     'author' => $author,
                     'articles' => $articles
-                ]);
+                ])
+                ->attach($pdf, sprintf('weekly-report-%s.pdf', date('Y-m-d')));
 
             $this->mailer->send($email);
         }

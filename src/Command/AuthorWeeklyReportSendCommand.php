@@ -12,6 +12,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\NamedAddress;
+use Symfony\WebpackEncoreBundle\Asset\EntrypointLookupInterface;
 use Twig\Environment;
 
 class AuthorWeeklyReportSendCommand extends Command
@@ -33,12 +34,16 @@ class AuthorWeeklyReportSendCommand extends Command
     /** @var Pdf */
     private $pdf;
 
+    /** @var EntrypointLookupInterface */
+    private $entrypointLookup;
+
     public function __construct(
         UserRepository $userRepository,
         ArticleRepository $articleRepository,
         MailerInterface $mailer,
         Environment $twig,
-        Pdf $pdf
+        Pdf $pdf,
+        EntrypointLookupInterface $entrypointLookup
     ) {
         parent::__construct(null);
         $this->userRepository = $userRepository;
@@ -46,6 +51,7 @@ class AuthorWeeklyReportSendCommand extends Command
         $this->mailer = $mailer;
         $this->twig = $twig;
         $this->pdf = $pdf;
+        $this->entrypointLookup = $entrypointLookup;
     }
 
     protected function configure()
@@ -74,6 +80,8 @@ class AuthorWeeklyReportSendCommand extends Command
             if (count($articles) === 0) {
                 continue;
             }
+
+            $this->entrypointLookup->reset();
 
             $html = $this->twig->render('email/author-weekly-report-pdf.html.twig', [
                 'articles' => $articles,

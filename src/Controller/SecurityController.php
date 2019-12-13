@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Form\Model\UserRegistrationFormModel;
 use App\Form\UserRegistrationFormType;
 use App\Security\LoginFormAuthenticator;
+use App\Service\Mailer;
 use Exception;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -66,7 +67,7 @@ class SecurityController extends AbstractController
      *
      * @throws TransportExceptionInterface
      */
-    public function register(Request $request, UserPasswordEncoderInterface $passwordEncoder, GuardAuthenticatorHandler $guardHandler, LoginFormAuthenticator $formAuthenticator, MailerInterface $mailer)
+    public function register(Request $request, UserPasswordEncoderInterface $passwordEncoder, GuardAuthenticatorHandler $guardHandler, LoginFormAuthenticator $formAuthenticator, Mailer $mailer)
     {
         $form = $this->createForm(UserRegistrationFormType::class);
         $form->handleRequest($request);
@@ -92,16 +93,7 @@ class SecurityController extends AbstractController
             $em->persist($user);
             $em->flush();
 
-            $email = (new TemplatedEmail())
-                ->from(new NamedAddress('alienmailer@example.com', 'The Space Bar'))
-                ->to(new NamedAddress($user->getEmail(), $user->getFirstName()))
-                ->subject('Welcome to the Space Bar!')
-                ->htmlTemplate('email/welcome.html.twig')
-                ->context([
-                    // 'user' => $user
-                ]);
-
-            $mailer->send($email);
+            $mailer->sendWelcomeMessage($user);
 
             return $guardHandler->authenticateUserAndHandleSuccess(
                 $user,

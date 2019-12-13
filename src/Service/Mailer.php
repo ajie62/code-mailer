@@ -32,7 +32,7 @@ class Mailer
         $this->entrypointLookup = $entrypointLookup;
     }
 
-    public function sendWelcomeMessage(User $user)
+    public function sendWelcomeMessage(User $user): TemplatedEmail
     {
         $email = (new TemplatedEmail())
             ->from(new NamedAddress('alienmailer@example.com', 'The Space Bar'))
@@ -44,9 +44,11 @@ class Mailer
             ]);
 
         $this->mailer->send($email);
+
+        return $email;
     }
 
-    public function sendAuthorWeeklyReportMessage(User $author, array $articles)
+    public function sendAuthorWeeklyReportMessage(User $author, array $articles): TemplatedEmail
     {
         $html = $this->twig->render('email/author-weekly-report-pdf.html.twig', [
             'articles' => $articles,
@@ -68,5 +70,7 @@ class Mailer
             ->attach($pdf, sprintf('weekly-report-%s.pdf', date('Y-m-d')));
 
         $this->mailer->send($email);
+
+        return $email;
     }
 }
